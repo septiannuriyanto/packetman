@@ -1,8 +1,14 @@
-# React + Vite
+# Packetman
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+App with real world use case to improve delivery letter registration process.
+Equipped with view items details, export to PDF and Print directly from web page
 
-Currently, two official plugins are available:
+## Introduction
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Hi, my name is Septian.<br>
+I'm and applied Software Engineer. I built apps to improve processes in Mining industry.
+I've been working in the coal mining industry since 2012 in the Supply Chain Management Department. So many things going around in material management. Managing goods is like several knowledge applications combined. However, hundreds of thousands of dollars invested by the company, so we cannot mess around with the poor quality of the material management system.<br><br>
+
+## Changelog
+
+<li> 24 July 2024 <i> MVP deployed
