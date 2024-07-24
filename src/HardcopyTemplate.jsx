@@ -36,21 +36,38 @@ class HardcopyTemplate extends React.PureComponent {
         </div>
         <div className="judul w-full flex-col h-20  content-center justify-center items-center mx-auto">
           <h1 className='font-bold text-center'>SURAT PENGIRIMAN BARANG</h1>
-          <h1 className='text-center'>No : BRCG/WH/{this.props.header ? this.props.header.spbType : ""}/{this.props.header ? this.props.header.idSurat : ""}/{this.props.header ? this.parseTimestamp(this.props.header.tglSuratJalan) : ""}</h1>
+          <h1 className='text-center'>No : BRCG/WH/{this.props.header ? this.props.header.spbType : ""}/{this.props.header ? this.props.header.id : ""}/{this.props.header ? this.parseTimestamp(this.props.header.tglSuratJalan) : ""}</h1>
 
         </div>
 
-        {/* <div className="destination w-full flex flex-row justify-end">
-              <div className="destination__container flex flex-col justify-center items-start w-1/5">
-              <h2>Kepada Yth.</h2>
-              <h2>{this.props.header? this.props.header.tujuan : ""}</h2>
-              <h2>di</h2>
-              <h2>{this.props.header? this.props.header.kota : ""}</h2>
-              </div>
+        <div className="flex mt-6">
+          <div className="w-1/5 ">
+          <div className="footer__sign text-start">
+              <h1 className=' font-bold underline'>Data Pengiriman </h1>
+              <h1>Ekspedisi</h1>
+              <h1>Nomor Polisi</h1>
+              <h1>Penerima</h1>
+            </div>
+          </div>
+          <div className="w-2/5 ">
+          <div className="footer__sign text-start">
+              <h1 className='text-white'>&#160;</h1>
+              <h1>: {this.props.header ? this.props.header.ekspedisi : ""}</h1>
+              <h1>: {this.props.header ? this.props.header.nopol : ""}</h1>
+              <h1>: _______________</h1>
+            </div>
+          </div>
+          <div className="w-2/5 ">
+          <div className="footer__sign text-start">
+              <h1 className=' font-bold underline'>Kepada Yth.</h1>
+              <h1>{this.props.header? this.props.header.tujuan : ""}</h1>
+              <h1>di</h1>
+              <h1>{this.props.header? this.props.header.kota : ""}</h1>
+            </div>
+          </div>
+        </div>
 
-            </div> */}
-
-        <div className="mt-10 signature grid grid-rows-1 grid-cols-5 p-2">
+        {/* <div className="mt-10 signature grid grid-rows-1 grid-cols-5 p-2">
           <div className="row-span-1 grid grid-rows-1 place-content-between justify-start">
             <div className="footer__sign text-start">
               <h1 className='text-center font-bold underline'>Data Pengiriman </h1>
@@ -84,7 +101,7 @@ class HardcopyTemplate extends React.PureComponent {
 
 
 
-        </div>
+        </div> */}
 
         <div className="mt-6 list__barang h-1/3 w-full block">
           <table className="table-fixed w-full mt-3">
@@ -158,7 +175,7 @@ class HardcopyTemplate extends React.PureComponent {
             </tbody>
           </table>
         </div>
-        
+
 
         <div className="tanggal mt-10 flex-col w-full items-end text-right justify-end">
           <h1 className='font-bold mr-3'>Gurimbang, {dateString}</h1>

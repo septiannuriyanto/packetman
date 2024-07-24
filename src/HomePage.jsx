@@ -34,9 +34,7 @@ const Homepage = () => {
   const fetchId = async () => {
 
     const q = query(sjHeaderRef, orderBy('id', 'desc'));
-
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-
       setSPBList(querySnapshot.docs);
 
     });
@@ -83,10 +81,11 @@ const Homepage = () => {
     setReportData(detailReport)
   }
 
-  const downloadReport = (e) => {
+  const downloadReport  = async (e) => {
+    e.preventDefault();
     var reportType = spbList[e.target.id].get('spbType');
 
-    prepareReport(e.target.id);
+    await prepareReport(e.target.id);
     const getTargetElement = () => document.getElementById("output-report");
 
     const options = {
@@ -127,30 +126,39 @@ const Homepage = () => {
     };
 
     e.preventDefault();
-    generatePDF(getTargetElement, options)
+    setTimeout(() => {
+      generatePDF(getTargetElement, options)
+    }, 1000);
 
   }
 
 
+  const returnData = (data) => {
+
+    return data.data();
+  }
+
   const prepareReport = async (number) => {
     setReportNumber(number);
-    const headerReport = spbList[number];
-
+    const headerData = spbList.map(returnData);
     const detailReport = await fetchReportItems(number);
+    const headerReport = headerData.find((e) => e.id == number)
+    console.log(headerReport);
 
-    const newHeader = {
-      "idSurat": number,
-      "tglSuratJalan": await headerReport.get('tglSuratJalan'),
-      "spbType": await headerReport.get('spbType'),
-      "creator": await headerReport.get('creator'),
-      "pengawas": await headerReport.get('pengawas'),
-      "tujuan": await headerReport.get('tujuan'),
-      "kota": await headerReport.get('kota'),
-      "ekspedisi": await headerReport.get('ekspedisi'),
-      "nopol": await headerReport.get('nopol'),
-    }
+    // const newHeader = {
+    //   "idSurat": number,
+    //   "tglSuratJalan": await headerReport.get('tglSuratJalan'),
+    //   "spbType": await headerReport.get('spbType'),
+    //   "creator": await headerReport.get('creator'),
+    //   "pengawas": await headerReport.get('pengawas'),
+    //   "tujuan": await headerReport.get('tujuan'),
+    //   "kota": await headerReport.get('kota'),
+    //   "ekspedisi": await headerReport.get('ekspedisi'),
+    //   "nopol": await headerReport.get('nopol'),
+    // }
+
     setReportDetailPrint(detailReport)
-    setReportHeaderPrint(newHeader)
+    setReportHeaderPrint(headerReport)
   }
 
   const printReport = async (e) => {
@@ -216,14 +224,15 @@ const Homepage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {spbList.map((item) => {
+                  {spbList.map((data) => {
+                    var item = data.data();
                     return (
                       <tr key={item.id} className="bg-white lg:hover:bg-gray-100 flex lg:table-row flex-row lg:flex-row flex-wrap lg:flex-no-wrap mb-10 lg:mb-0">
                         <td className="w-full lg:w-auto p-3 text-gray-800 text-center border border-b block lg:table-cell relative lg:static">
                           <span className="lg:hidden absolute top-0 left-0 bg-blue-200 px-2 py-1 text-xs font-bold uppercase">
                             No Surat
                           </span>
-                          {item.get("id")}
+                          {item.id}
                         </td>
 
                         <td className="w-full lg:w-auto p-3 text-gray-800 text-center border border-b block lg:table-cell relative lg:static">
@@ -231,7 +240,7 @@ const Homepage = () => {
                             Tanggal
                           </span>
                           {
-                            parseTimestamp(item.get("tglSuratJalan"))
+                            parseTimestamp(item.tglSuratJalan)
 
                           }
                         </td>
@@ -240,35 +249,35 @@ const Homepage = () => {
                           <span className="lg:hidden absolute top-0 left-0 bg-blue-200 px-2 py-1 text-xs font-bold uppercase">
                             SPB Type
                           </span>
-                          {item.get("spbType")}
+                          {item.spbType}
                         </td>
 
                         <td className="w-full lg:w-auto p-3 text-gray-800 text-center border border-b block lg:table-cell relative lg:static">
                           <span className="lg:hidden absolute top-0 left-0 bg-blue-200 px-2 py-1 text-xs font-bold uppercase">
                             Tujuan
                           </span>
-                          {item.get("tujuan")}
+                          {item.tujuan}
                         </td>
 
                         <td className="w-full lg:w-auto p-3 text-gray-800 text-center border border-b block lg:table-cell relative lg:static">
                           <span className="lg:hidden absolute top-0 left-0 bg-blue-200 px-2 py-1 text-xs font-bold uppercase">
                             Ekspedisi
                           </span>
-                          {item.get("ekspedisi")}
+                          {item.ekspedisi}
                         </td>
 
                         <td className="w-full lg:w-auto p-3 text-gray-800 text-center border border-b block lg:table-cell relative lg:static">
                           <span className="lg:hidden absolute top-0 left-0 bg-blue-200 px-2 py-1 text-xs font-bold uppercase">
                             No Polisi
                           </span>
-                          {item.get("nopol")}
+                          {item.nopol}
                         </td>
 
                         <td className="w-full lg:w-auto p-3 text-gray-800 text-center border border-b block lg:table-cell relative lg:static">
                           <span className="lg:hidden absolute top-0 left-0 bg-blue-200 px-2 py-1 text-xs font-bold uppercase">
                             Dibuat Oleh
                           </span>
-                          {item.get("creator")}
+                          {item.creator}
                         </td>
 
                         <td className="m-auto items-center  justify-center w-full lg:w-auto p-3 text-gray-800 border border-b text-center block lg:table-cell relative lg:static">
@@ -341,8 +350,11 @@ const Homepage = () => {
           </div>
         </div>
       </div>
-
-      <HardcopyTemplate header={reportHeaderPrint} detail={reportDetailPrint} ref={componentRef} hidden={true} />
+      
+      <div className="w-full sign flex flex-row text-center m-auto justify-center text-sm"><h4 className='font-thin'>Packetman app v 1.1 | Built by Scalar Coding </h4></div>
+      <div className={`document__container hidden`}>
+            <HardcopyTemplate header={reportHeaderPrint} detail={reportDetailPrint} ref={componentRef} />
+      </div>
     </div>
   )
 }
