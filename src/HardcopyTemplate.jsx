@@ -131,7 +131,7 @@ class HardcopyTemplate extends React.PureComponent {
             <tbody>
               {
 
-                this.props.detail ? this.props.detail.map((item) => (
+                this.props.detail ? this.props.detail.reverse().map((item) => (
                   <tr key={item.id} className={item.id % 2 == 0 ? `bg-white hover:bg-gray-100` : `bg-gray-100 hover:bg-gray-200` + `table-row flex-row flex-wrap flex-no-wrap mb-10`}>
 
                     <td className="w-full lg:w-auto p-3 text-gray-800 text-center text-xs border-b table-cell auto">
