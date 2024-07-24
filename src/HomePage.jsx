@@ -348,7 +348,7 @@ const Homepage = () => {
         </div>
       </div>
       
-      <div className="w-full sign flex flex-row text-center m-auto justify-center text-sm"><h4 className='font-thin'>Packetman app v 1.2 | Built by Scalar Coding </h4></div>
+      <div className="w-full sign flex flex-row text-center m-auto justify-center text-sm"><h4 className='font-thin'>Packetman app v 1.3 | Built by Scalar Coding </h4></div>
       {showReport==false? <div></div> : <div  className={`document__container`} >
             <HardcopyTemplate header={reportHeaderPrint} detail={reportDetailPrint} ref={componentRef} />
       </div>}
