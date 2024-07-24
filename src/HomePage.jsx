@@ -31,7 +31,6 @@ const Homepage = () => {
   });
 
   const fetchId = async () => {
-
     const q = query(sjHeaderRef, orderBy('id', 'desc'));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       setSPBList(querySnapshot.docs);
@@ -44,14 +43,13 @@ const Homepage = () => {
   }
 
   const fetchReportItems = async (id) => {
-
     var dataReport = [];
     const q = query(sjDetailRef, where('idSurat', "==", parseInt(id)));
     const querySnapshot = await getDocs(q);
     querySnapshot.forEach((doc) => {
       dataReport.push(doc.data());
     });
-
+    dataReport.sort((a,b) => a.id - b.id)
     return dataReport;
   }
 
@@ -86,7 +84,6 @@ const Homepage = () => {
         setShowReport(true);
     }, 1000);
     var reportType = spbList[e.target.id].get('spbType');
-
     await prepareReport(e.target.id);
     const getTargetElement = () => document.getElementById("output-report");
 
@@ -348,7 +345,7 @@ const Homepage = () => {
         </div>
       </div>
       
-      <div className="w-full sign flex flex-row text-center m-auto justify-center text-sm"><h4 className='font-thin'>Packetman app v 1.3 | Built by Scalar Coding </h4></div>
+      <div className="w-full sign flex flex-row text-center m-auto justify-center text-sm"><h4 className='font-thin'>Packetman app v 1.4 | Built by Scalar Coding </h4></div>
       {showReport==false? <div></div> : <div  className={`document__container`} >
             <HardcopyTemplate header={reportHeaderPrint} detail={reportDetailPrint} ref={componentRef} />
       </div>}
