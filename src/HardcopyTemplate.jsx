@@ -23,7 +23,7 @@ class HardcopyTemplate extends React.PureComponent {
 
   render() {
     return (
-      <div id=' output-report' className=" pageMargin w-[210mm] h-[297mm] m-auto p-[0.5in] border border-gray-300">
+      <div id='output-report' className=" pageMargin w-[210mm] h-[297mm] m-auto p-[0.5in] border border-gray-300">
         <div className="heading__container inline-flex justify-center items-center">
           <div className="heading__logo mr-2">
             <img src={LogoPama} className=" h-11 w-11" alt="" />

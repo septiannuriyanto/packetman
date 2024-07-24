@@ -2,12 +2,10 @@ import { useState, useEffect, useRef } from "react"
 import { sjHeaderRef } from "./FirebaseConfig";
 import { query, orderBy, } from "firebase/firestore";
 import { onSnapshot } from "firebase/firestore";
-import { IconButton, ButtonToolbar } from 'rsuite';
-import SearchIcon from '@rsuite/icons/Search';
 import { useNavigate } from "react-router-dom";
 import Modal from "./Modal";
-import { db, sjDetailRef } from "./FirebaseConfig";
-import { doc, getDoc, getDocs, where } from "firebase/firestore";
+import { sjDetailRef } from "./FirebaseConfig";
+import { getDocs, where } from "firebase/firestore";
 
 import { useReactToPrint } from 'react-to-print';
 import HardcopyTemplate from "./HardcopyTemplate";
@@ -21,6 +19,7 @@ const Homepage = () => {
   const [spbList, setSPBList] = useState([]);
   const [reportData, setReportData] = useState(null);
   const [reportNumber, setReportNumber] = useState(0);
+  const [showReport, setShowReport] = useState(false);
 
   const [showModal, setShowModal] = useState(false);
 
@@ -83,6 +82,9 @@ const Homepage = () => {
 
   const downloadReport  = async (e) => {
     e.preventDefault();
+    setTimeout(() => {
+        setShowReport(true);
+    }, 1000);
     var reportType = spbList[e.target.id].get('spbType');
 
     await prepareReport(e.target.id);
@@ -130,6 +132,10 @@ const Homepage = () => {
       generatePDF(getTargetElement, options)
     }, 1000);
 
+    setTimeout(() => {
+      setShowReport(false);
+    }, 1000);
+
   }
 
 
@@ -143,36 +149,27 @@ const Homepage = () => {
     const headerData = spbList.map(returnData);
     const detailReport = await fetchReportItems(number);
     const headerReport = headerData.find((e) => e.id == number)
-    console.log(headerReport);
-
-    // const newHeader = {
-    //   "idSurat": number,
-    //   "tglSuratJalan": await headerReport.get('tglSuratJalan'),
-    //   "spbType": await headerReport.get('spbType'),
-    //   "creator": await headerReport.get('creator'),
-    //   "pengawas": await headerReport.get('pengawas'),
-    //   "tujuan": await headerReport.get('tujuan'),
-    //   "kota": await headerReport.get('kota'),
-    //   "ekspedisi": await headerReport.get('ekspedisi'),
-    //   "nopol": await headerReport.get('nopol'),
-    // }
-
     setReportDetailPrint(detailReport)
     setReportHeaderPrint(headerReport)
   }
 
   const printReport = async (e) => {
     e.preventDefault();
+    setTimeout(() => {
+      setShowReport(true)
+    }, 1000);
     const indx = e.target.id;
     prepareReport(indx);
     setTimeout(() => {
       handleStates();
+      setShowReport(false)
     }, 1000);
 
 
   }
   const handleStates = () => {
     handlePrint();
+
   }
 
   return (
@@ -352,9 +349,9 @@ const Homepage = () => {
       </div>
       
       <div className="w-full sign flex flex-row text-center m-auto justify-center text-sm"><h4 className='font-thin'>Packetman app v 1.2 | Built by Scalar Coding </h4></div>
-      <div className={`document__container hidden`}>
+      {showReport==false? <div></div> : <div  className={`document__container`} >
             <HardcopyTemplate header={reportHeaderPrint} detail={reportDetailPrint} ref={componentRef} />
-      </div>
+      </div>}
     </div>
   )
 }
