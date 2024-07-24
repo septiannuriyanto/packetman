@@ -210,8 +210,9 @@ function App() {
   };
 
   const resetAllForm = () => {
+    navigate('/')
     alert('Surat Jalan Berhasil Dibuat')
-    window.location.reload(false);
+    
 
     //Object
     // setspbheader(null);

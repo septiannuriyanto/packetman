@@ -23,7 +23,7 @@ class HardcopyTemplate extends React.PureComponent {
 
   render() {
     return (
-      <div id='output-report' className=" pageMargin w-[210mm] h-[297mm] m-auto p-[0.5in] border border-gray-300">
+      <div id=' output-report' className=" pageMargin w-[210mm] h-[297mm] m-auto p-[0.5in] border border-gray-300">
         <div className="heading__container inline-flex justify-center items-center">
           <div className="heading__logo mr-2">
             <img src={LogoPama} className=" h-11 w-11" alt="" />
@@ -34,35 +34,35 @@ class HardcopyTemplate extends React.PureComponent {
             <h6>SM Department</h6>
           </div>
         </div>
-        <div className="judul w-full flex-col h-20  content-center justify-center items-center mx-auto">
-          <h1 className='font-bold text-center'>SURAT PENGIRIMAN BARANG</h1>
-          <h1 className='text-center'>No : BRCG/WH/{this.props.header ? this.props.header.spbType : ""}/{this.props.header ? this.props.header.id : ""}/{this.props.header ? this.parseTimestamp(this.props.header.tglSuratJalan) : ""}</h1>
+        <div className="judul w-full flex-col h-20  content-center justify-center items-center mx-auto ">
+          <h1 className='font-bold text-center text-lg'>SURAT PENGIRIMAN BARANG</h1>
+          <h1 className='text-center text-sm'>No : BRCG/WH/{this.props.header ? this.props.header.spbType : ""}/{this.props.header ? this.props.header.id : ""}/{this.props.header ? this.parseTimestamp(this.props.header.tglSuratJalan) : ""}</h1>
 
         </div>
 
         <div className="flex mt-6">
           <div className="w-1/5 ">
           <div className="footer__sign text-start">
-              <h1 className=' font-bold underline'>Data Pengiriman </h1>
-              <h1>Ekspedisi</h1>
-              <h1>Nomor Polisi</h1>
-              <h1>Penerima</h1>
+              <h1 className=' font-bold underline text-xs'>Data Pengiriman </h1>
+              <h1 className='text-xs'>Ekspedisi</h1>
+              <h1 className='text-xs'>Nomor Polisi</h1>
+              <h1 className='text-xs'>Penerima</h1>
             </div>
           </div>
           <div className="w-2/5 ">
           <div className="footer__sign text-start">
               <h1 className='text-white'>&#160;</h1>
-              <h1>: {this.props.header ? this.props.header.ekspedisi : ""}</h1>
-              <h1>: {this.props.header ? this.props.header.nopol : ""}</h1>
-              <h1>: _______________</h1>
+              <h1 className='text-xs'>: {this.props.header ? this.props.header.ekspedisi : ""}</h1>
+              <h1 className='text-xs'>: {this.props.header ? this.props.header.nopol : ""}</h1>
+              <h1 className='text-xs'>: _______________</h1>
             </div>
           </div>
           <div className="w-2/5 ">
           <div className="footer__sign text-start">
-              <h1 className=' font-bold underline'>Kepada Yth.</h1>
-              <h1>{this.props.header? this.props.header.tujuan : ""}</h1>
-              <h1>di</h1>
-              <h1>{this.props.header? this.props.header.kota : ""}</h1>
+              <h1 className=' text-xs font-bold underline'>Kepada Yth.</h1>
+              <h1 className='text-xs'>{this.props.header? this.props.header.tujuan : ""}</h1>
+              <h1 className='text-xs'>di</h1>
+              <h1 className='text-xs'>{this.props.header? this.props.header.kota : ""}</h1>
             </div>
           </div>
         </div>
@@ -104,25 +104,25 @@ class HardcopyTemplate extends React.PureComponent {
         </div> */}
 
         <div className="mt-6 list__barang h-1/3 w-full block">
-          <table className="table-fixed w-full mt-3">
+          <table className="table-fixed w-full mt-3 items-start">
             <thead>
               <tr>
-                <th className="p-0 font-bold uppercase bg-slate-200 text-gray-600 table-cell">
+                <th className="py-2 font-bold uppercase bg-slate-200 text-xs text-gray-600 table-cell">
                   No.
                 </th>
-                <th className="p-3 font-bold uppercase bg-slate-200 text-gray-600 table-cell">
+                <th className="p-0 font-bold uppercase bg-slate-200 text-xs text-gray-600 table-cell">
                   Nama Barang
                 </th>
-                <th className="p-3 font-bold uppercase bg-slate-200 text-gray-600 table-cell">
+                <th className="p-0 font-bold uppercase bg-slate-200 text-xs text-gray-600 table-cell">
                   Qty
                 </th>
-                <th className="p-3 font-bold uppercase bg-slate-200 text-gray-600 table-cell">
+                <th className="p-0 font-bold uppercase bg-slate-200 text-xs text-gray-600 table-cell">
                   Satuan
                 </th>
-                <th className="p-3 font-bold uppercase bg-slate-200 text-gray-600 table-cell">
+                <th className="p-0 font-bold uppercase bg-slate-200 text-xs text-gray-600 table-cell">
                   Referensi
                 </th>
-                <th className="p-3 font-bold uppercase bg-slate-200 text-gray-600 table-cell">
+                <th className="p-0 font-bold uppercase bg-slate-200 text-xs text-gray-600 table-cell">
                   Remark
                 </th>
               </tr>
@@ -132,30 +132,30 @@ class HardcopyTemplate extends React.PureComponent {
               {
 
                 this.props.detail ? this.props.detail.map((item) => (
-                  <tr key={item.id} className={item.id % 2 == 0 ? `bg-white hover:bg-gray-100` : `bg-gray-100 hover:bg-gray-200` `table-row flex-row flex-wrap flex-no-wrap mb-10`}>
+                  <tr key={item.id} className={item.id % 2 == 0 ? `bg-white hover:bg-gray-100` : `bg-gray-100 hover:bg-gray-200` + `table-row flex-row flex-wrap flex-no-wrap mb-10`}>
 
-                    <td className="w-full lg:w-auto p-3 text-gray-800 text-center  border-b table-cell auto">
+                    <td className="w-full lg:w-auto p-3 text-gray-800 text-center text-xs border-b table-cell auto">
                       {item.id + 1}
                     </td>
 
-                    <td className="w-full lg:w-auto p-3 text-gray-800 text-center  border-b table-cell static">
+                    <td className="w-full lg:w-auto p-3 text-gray-800 text-xs border-b table-cell static">
                       {item.namaBarang}
                     </td>
 
-                    <td className="w-full lg:w-auto p-3 text-gray-800 text-center  border-b  table-cell static">
+                    <td className="w-full lg:w-auto p-3 text-gray-800 text-center text-xs border-b table-cell static">
                       {item.qty}
                     </td>
 
-                    <td className="w-full lg:w-auto p-3 text-gray-800 text-center  border-b table-cell static">
+                    <td className="w-full lg:w-auto p-3 text-gray-800 text-center text-xs border-b table-cell static">
                       <span className="">
                         {item.satuan}
                       </span>
                     </td>
 
-                    <td className="w-full lg:w-auto p-3 text-gray-800 text-center  border-b table-cell static">
+                    <td className="w-full lg:w-auto p-3 text-gray-800 text-center text-xs border-b table-cell static">
                       {item.referensi}
                     </td>
-                    <td className="w-full lg:w-auto p-3 text-gray-800 text-center  border-b table-cell static">
+                    <td className="w-full lg:w-auto p-3 text-gray-800 text-center text-xs border-b table-cell static">
 
                     </td>
 
@@ -186,7 +186,7 @@ class HardcopyTemplate extends React.PureComponent {
             <h1 className='text-center'>Penerima </h1>
             <div className="footer__sign text-center">
               <h1>___________ </h1>
-              <h1>{this.props.header ? this.props.header.ekspedisi : ""}</h1>
+              <h1 className='text-xs'>{this.props.header ? this.props.header.ekspedisi : ""}</h1>
             </div>
 
           </div>
@@ -195,7 +195,7 @@ class HardcopyTemplate extends React.PureComponent {
             <h1 className='text-center'>Mengetahui </h1>
             <div className="footer__sign text-center">
               <h1 className='font-bold'>{this.props.header ? this.props.header.pengawas : ""}</h1>
-              <h1>Pengawas</h1>
+              <h1 className='text-xs'>Pengawas</h1>
             </div>
 
           </div>
@@ -204,7 +204,7 @@ class HardcopyTemplate extends React.PureComponent {
             <h1 className='text-center'>Dibuat Oleh </h1>
             <div className="footer__sign text-center">
               <h1 className='font-bold'>{this.props.header ? this.props.header.creator : ""}</h1>
-              <h1>Creator</h1>
+              <h1 className='text-xs'>Creator</h1>
             </div>
 
           </div>

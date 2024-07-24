@@ -197,28 +197,28 @@ const Homepage = () => {
               <table className="border-collapse w-full mt-1">
                 <thead>
                   <tr>
-                    <th className="sticky p-3 font-bold uppercase bg-gray-200 text-gray-600 border border-gray-300 hidden lg:table-cell">
+                    <th className="sticky p-1 font-bold uppercase bg-gray-200 text-gray-600 border border-gray-300 hidden lg:table-cell">
                       No Surat
                     </th>
-                    <th className="sticky p-3 font-bold uppercase bg-gray-200 text-gray-600 border border-gray-300 hidden lg:table-cell">
+                    <th className="sticky p-1 font-bold uppercase bg-gray-200 text-gray-600 border border-gray-300 hidden lg:table-cell">
                       Tanggal
                     </th>
-                    <th className="sticky p-3 font-bold uppercase bg-gray-200 text-gray-600 border border-gray-300 hidden lg:table-cell">
+                    <th className="sticky p-1 font-bold uppercase bg-gray-200 text-gray-600 border border-gray-300 hidden lg:table-cell">
                       Kategori
                     </th>
-                    <th className="sticky p-3 font-bold uppercase bg-gray-200 text-gray-600 border border-gray-300 hidden lg:table-cell">
+                    <th className="sticky p-1 font-bold uppercase bg-gray-200 text-gray-600 border border-gray-300 hidden lg:table-cell">
                       Tujuan
                     </th>
-                    <th className="sticky p-3 font-bold uppercase bg-gray-200 text-gray-600 border border-gray-300 hidden lg:table-cell">
+                    <th className="sticky p-1 font-bold uppercase bg-gray-200 text-gray-600 border border-gray-300 hidden lg:table-cell">
                       Pengirim
                     </th>
-                    <th className="sticky p-3 font-bold uppercase bg-gray-200 text-gray-600 border border-gray-300 hidden lg:table-cell">
+                    <th className="sticky p-1 font-bold uppercase bg-gray-200 text-gray-600 border border-gray-300 hidden lg:table-cell">
                       Nomor Polisi
                     </th>
-                    <th className="sticky p-3 font-bold uppercase bg-gray-200 text-gray-600 border border-gray-300 hidden lg:table-cell">
+                    <th className="sticky p-1 font-bold uppercase bg-gray-200 text-gray-600 border border-gray-300 hidden lg:table-cell">
                       Dibuat Oleh
                     </th>
-                    <th className="sticky p-3 font-bold uppercase bg-gray-200 text-gray-600 border border-gray-300 hidden lg:table-cell">
+                    <th className="sticky p-1 font-bold uppercase bg-gray-200 text-gray-600 border border-gray-300 hidden lg:table-cell">
                       Action
                     </th>
                   </tr>
@@ -227,15 +227,15 @@ const Homepage = () => {
                   {spbList.map((data) => {
                     var item = data.data();
                     return (
-                      <tr key={item.id} className="bg-white lg:hover:bg-gray-100 flex lg:table-row flex-row lg:flex-row flex-wrap lg:flex-no-wrap mb-10 lg:mb-0">
-                        <td className="w-full lg:w-auto p-3 text-gray-800 text-center border border-b block lg:table-cell relative lg:static">
-                          <span className="lg:hidden absolute top-0 left-0 bg-blue-200 px-2 py-1 text-xs font-bold uppercase">
+                      <tr key={item.id} className="bg-white lg:hover:bg-gray-100 flex lg:table-row text-xs flex-row lg:flex-row flex-wrap lg:flex-no-wrap mb-10 lg:mb-0">
+                        <td className="w-full lg:w-auto p-2 text-gray-800 text-center border border-b block lg:table-cell relative lg:static">
+                          <span className="lg:hidden absolute top-0 left-0 bg-blue-200 py-1 text-xs font-bold uppercase">
                             No Surat
                           </span>
                           {item.id}
                         </td>
 
-                        <td className="w-full lg:w-auto p-3 text-gray-800 text-center border border-b block lg:table-cell relative lg:static">
+                        <td className="w-full lg:w-auto p-2 text-gray-800 text-center border border-b block lg:table-cell relative lg:static">
                           <span className="lg:hidden absolute top-0 left-0 bg-blue-200 px-2 py-1 text-xs font-bold uppercase">
                             Tanggal
                           </span>
@@ -245,47 +245,47 @@ const Homepage = () => {
                           }
                         </td>
 
-                        <td className="w-full lg:w-auto p-3 text-gray-800 text-center border border-b block lg:table-cell relative lg:static">
+                        <td className="w-full lg:w-auto p-2 text-gray-800 text-center border border-b block lg:table-cell relative lg:static">
                           <span className="lg:hidden absolute top-0 left-0 bg-blue-200 px-2 py-1 text-xs font-bold uppercase">
                             SPB Type
                           </span>
                           {item.spbType}
                         </td>
 
-                        <td className="w-full lg:w-auto p-3 text-gray-800 text-center border border-b block lg:table-cell relative lg:static">
+                        <td className="w-full lg:w-auto p-2 text-gray-800 text-center border border-b block lg:table-cell relative lg:static">
                           <span className="lg:hidden absolute top-0 left-0 bg-blue-200 px-2 py-1 text-xs font-bold uppercase">
                             Tujuan
                           </span>
                           {item.tujuan}
                         </td>
 
-                        <td className="w-full lg:w-auto p-3 text-gray-800 text-center border border-b block lg:table-cell relative lg:static">
+                        <td className="w-full lg:w-auto p-2 text-gray-800 text-center border border-b block lg:table-cell relative lg:static">
                           <span className="lg:hidden absolute top-0 left-0 bg-blue-200 px-2 py-1 text-xs font-bold uppercase">
                             Ekspedisi
                           </span>
                           {item.ekspedisi}
                         </td>
 
-                        <td className="w-full lg:w-auto p-3 text-gray-800 text-center border border-b block lg:table-cell relative lg:static">
+                        <td className="w-full lg:w-auto p-2 text-gray-800 text-center border border-b block lg:table-cell relative lg:static">
                           <span className="lg:hidden absolute top-0 left-0 bg-blue-200 px-2 py-1 text-xs font-bold uppercase">
                             No Polisi
                           </span>
                           {item.nopol}
                         </td>
 
-                        <td className="w-full lg:w-auto p-3 text-gray-800 text-center border border-b block lg:table-cell relative lg:static">
+                        <td className="w-full lg:w-auto p-2 text-gray-800 text-center border border-b block lg:table-cell relative lg:static">
                           <span className="lg:hidden absolute top-0 left-0 bg-blue-200 px-2 py-1 text-xs font-bold uppercase">
                             Dibuat Oleh
                           </span>
                           {item.creator}
                         </td>
 
-                        <td className="m-auto items-center  justify-center w-full lg:w-auto p-3 text-gray-800 border border-b text-center block lg:table-cell relative lg:static">
-                          <span className="lg:hidden absolute top-0 left-0 bg-blue-200 px-2 py-1 text-xs font-bold uppercase">
+                        <td className="m-auto items-center justify-center w-full lg:w-auto p-2 text-gray-800 border border-b text-center block lg:table-cell relative lg:static">
+                          <span className="lg:hidden absolute top-0 left-0 bg-blue-200 px-2  text-xs font-bold uppercase">
                             Action
                           </span>
 
-                          <div className="inline-block p-2">
+                          <div className="inline-flex">
                             <a
                               id={item.id}
                               onClick={viewItems}
@@ -351,7 +351,7 @@ const Homepage = () => {
         </div>
       </div>
       
-      <div className="w-full sign flex flex-row text-center m-auto justify-center text-sm"><h4 className='font-thin'>Packetman app v 1.1 | Built by Scalar Coding </h4></div>
+      <div className="w-full sign flex flex-row text-center m-auto justify-center text-sm"><h4 className='font-thin'>Packetman app v 1.2 | Built by Scalar Coding </h4></div>
       <div className={`document__container hidden`}>
             <HardcopyTemplate header={reportHeaderPrint} detail={reportDetailPrint} ref={componentRef} />
       </div>
