@@ -54,7 +54,6 @@ function App() {
       setTimeout(() => {
 
       }, 2000);
-      console.log('Next No Surat : ' + noSurat);
     });
     return () => {
       unsubscribe();

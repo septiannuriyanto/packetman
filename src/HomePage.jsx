@@ -30,17 +30,8 @@ const Homepage = () => {
     content: () => componentRef.current,
   });
 
-  const fetchId = async () => {
-    const q = query(sjHeaderRef, orderBy('id', 'desc'));
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      setSPBList(querySnapshot.docs);
-
-    });
-    return () => {
-      unsubscribe();
-    }
-
-  }
+  const q = query(sjHeaderRef, orderBy('id', 'desc'));
+  const dataSPB = [];
 
   const fetchReportItems = async (id) => {
     var dataReport = [];
@@ -49,15 +40,34 @@ const Homepage = () => {
     querySnapshot.forEach((doc) => {
       dataReport.push(doc.data());
     });
-    dataReport.sort((a,b) => a.id - b.id)
+    dataReport.sort((a, b) => a.id - b.id)
     return dataReport;
   }
 
 
   useEffect(() => {
-    fetchId();
-
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      querySnapshot.forEach((doc) => {
+        dataSPB.push({
+          ...doc.data(), doc,
+        });
+      });
+    });
+    return unsubscribe;
+    
   },)
+
+  useEffect(()=>{
+    setTimeout(() => {
+    console.log('Loading data')
+        setSPBList(dataSPB);
+    }, 3000);
+    
+  
+  
+  },[])
+
+
 
 
   const parseTimestamp = (time) => {
@@ -78,10 +88,10 @@ const Homepage = () => {
     setReportData(detailReport)
   }
 
-  const downloadReport  = async (e) => {
+  const downloadReport = async (e) => {
     e.preventDefault();
     setTimeout(() => {
-        setShowReport(true);
+      setShowReport(true);
     }, 1000);
     var reportType = spbList[e.target.id].get('spbType');
     await prepareReport(e.target.id);
@@ -219,7 +229,7 @@ const Homepage = () => {
                 </thead>
                 <tbody>
                   {spbList.map((data) => {
-                    var item = data.data();
+                    var item = data
                     return (
                       <tr key={item.id} className="bg-white lg:hover:bg-gray-100 flex lg:table-row text-xs flex-row lg:flex-row flex-wrap lg:flex-no-wrap mb-10 lg:mb-0">
                         <td className="w-full lg:w-auto p-2 text-gray-800 text-center border border-b block lg:table-cell relative lg:static">
@@ -344,10 +354,10 @@ const Homepage = () => {
           </div>
         </div>
       </div>
-      
-      <div className="w-full sign flex flex-row text-center m-auto justify-center text-sm"><h4 className='font-thin'>Packetman app v 1.4 | Built by Scalar Coding </h4></div>
-      {showReport==false? <div></div> : <div  className={`document__container`} >
-            <HardcopyTemplate header={reportHeaderPrint} detail={reportDetailPrint} ref={componentRef} />
+
+      <div className="w-full sign flex flex-row text-center m-auto justify-center text-sm"><h4 className='font-thin'>Packetman app v 1.5 | Built by Scalar Coding </h4></div>
+      {showReport == false ? <div></div> : <div className={`document__container`} >
+        <HardcopyTemplate header={reportHeaderPrint} detail={reportDetailPrint} ref={componentRef} />
       </div>}
     </div>
   )
