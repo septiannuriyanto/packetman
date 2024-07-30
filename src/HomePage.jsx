@@ -62,8 +62,7 @@ const Homepage = () => {
     console.log('Loading data')
         setSPBList(dataSPB);
     }, 3000);
-    
-  
+
   
   },[])
 
@@ -93,7 +92,10 @@ const Homepage = () => {
     setTimeout(() => {
       setShowReport(true);
     }, 1000);
-    var reportType = spbList[e.target.id].get('spbType');
+
+    console.log(e.target.id);
+
+    var reportType = spbList[e.target.id].spbType;
     await prepareReport(e.target.id);
     const getTargetElement = () => document.getElementById("output-report");
 
@@ -146,26 +148,25 @@ const Homepage = () => {
   }
 
 
-  const returnData = (data) => {
-
-    return data.data();
-  }
-
   const prepareReport = async (number) => {
     setReportNumber(number);
-    const headerData = spbList.map(returnData);
     const detailReport = await fetchReportItems(number);
-    const headerReport = headerData.find((e) => e.id == number)
+    const headerReport = spbList.find((e) => e.id == number)
     setReportDetailPrint(detailReport)
     setReportHeaderPrint(headerReport)
+    setShowReport(true)
+    setTimeout(() => {
+      
+    }, 1000);
+
   }
 
   const printReport = async (e) => {
     e.preventDefault();
-    setTimeout(() => {
-      setShowReport(true)
-    }, 1000);
+
+    
     const indx = e.target.id;
+    
     prepareReport(indx);
     setTimeout(() => {
       handleStates();
@@ -355,7 +356,7 @@ const Homepage = () => {
         </div>
       </div>
 
-      <div className="w-full sign flex flex-row text-center m-auto justify-center text-sm"><h4 className='font-thin'>Packetman app v 1.5 | Built by Scalar Coding </h4></div>
+      <div className="w-full sign flex flex-row text-center m-auto justify-center text-sm"><h4 className='font-thin'>Packetman app v 1.6 | Built by Scalar Coding </h4></div>
       {showReport == false ? <div></div> : <div className={`document__container`} >
         <HardcopyTemplate header={reportHeaderPrint} detail={reportDetailPrint} ref={componentRef} />
       </div>}
