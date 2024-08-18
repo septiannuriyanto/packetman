@@ -20,7 +20,8 @@
     "react-router-dom": "^6.25.1",
     "react-to-pdf": "^1.0.1",
     "react-to-print": "^2.15.1",
-    "rsuite": "^5.67.0"
+    "rsuite": "^5.67.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/react": "^18.3.3",
