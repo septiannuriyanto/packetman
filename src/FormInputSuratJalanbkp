@@ -186,42 +186,27 @@ function App() {
   }
 
   const submitConfirmation = (e) => {
-  e.preventDefault();
-  confirmAlert({
-    title: 'Konfirmasi',
-    message: 'Yakin submit surat jalan ini?',
-    buttons: [
-      {
-        label: 'Yes',
-        onClick: async () => {
-          try {
-            // Ensure spbheader is a plain object
+    e.preventDefault();
+    confirmAlert({
+      title: 'Konfirmasi',
+      message: 'Yakin submit surat jalan ini?',
+      buttons: [
+        {
+          label: 'Yes',
+          onClick: async () => {
             await setDoc(doc(db, "surat_jalan", noSurat.toString()), spbheader);
-
-            // Ensure spbitems is an array of plain objects
-            await Promise.all(spbitems.map(item => {
-              // Ensure item is a plain object
-              if (typeof item === 'string') {
-                throw new Error("Item should be an object, not a string.");
-              }
-              return addDoc(collection(db, "surat_jalan_items"), item);
-            }));
-
-            // Reset the form after successful submission
+            spbitems.map(async (item) => {
+              await addDoc(collection(db, "surat_jalan_items"), item);
+            });
             resetAllForm();
-          } catch (error) {
-            // Handle errors (e.g., show an error message to the user)
-            console.error("Error submitting surat jalan:", error);
           }
+        },
+        {
+          label: 'No',
         }
-      },
-      {
-        label: 'No',
-      }
-    ]
-  });
-};
-
+      ]
+    })
+  };
 
   const resetAllForm = () => {
     navigate('/')
