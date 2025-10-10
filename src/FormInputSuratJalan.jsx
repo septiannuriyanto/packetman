@@ -1,25 +1,27 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import "./App.css";
 import { confirmAlert } from 'react-confirm-alert'; // Import
 import 'react-confirm-alert/src/react-confirm-alert.css' // Import css
 
-import { doc, setDoc, addDoc, } from "firebase/firestore";
-
-import { query, orderBy, limit } from "firebase/firestore";
-import { collection, onSnapshot } from "firebase/firestore";
+import { doc, setDoc, addDoc, query, orderBy, limit, collection, onSnapshot } from "firebase/firestore";
 import { db, sjHeaderRef } from "./FirebaseConfig";
 import { useNavigate } from "react-router-dom";
 
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
 
+// --- Icon Components (Optional, for cleaner code) ---
+// Note: Assuming you use Tailwind and FontAwesome/similar icons
+const CheckIcon = () => <svg className="w-4 h-4 mr-1 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M0 11l2-2 5 5L18 3l2 2L7 18z"/></svg>;
+const PlusIcon = () => <svg className="w-4 h-4 mr-1 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>;
+const SaveIcon = () => <svg className="w-4 h-4 mr-1 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>;
 
 
 function App() {
 
   const navigate = useNavigate();
 
-  //SPB Variable Hook Declaration
+  // SPB Variable Hook Declaration
   const [spbtype, setSpbType] = useState('SPB');
   const [noSurat, setNoSurat] = useState(0);
   const [creator, setCreator] = useState('');
@@ -28,14 +30,16 @@ function App() {
   const [kota, setKota] = useState('');
   const [ekspedisi, setEkspedisi] = useState('');
   const [nopol, setNopol] = useState('');
+  const [isHeaderValid, setIsHeaderValid] = useState(false); // Validasi untuk enable tombol
+  
   var tglSurat = new Date();
-  var dateString = tglSurat.getDate() + " " + months[tglSurat.getMonth()] + " " + tglSurat.getFullYear();
+  var dateString = tglSurat.getDate().toString().padStart(2, '0') + " " + months[tglSurat.getMonth()] + " " + tglSurat.getFullYear();
 
-  //SPB Object Hook Declaration
+  // SPB Object Hook Declaration
   const [spbheader, setspbheader] = useState(null);
   const [spbitems, setspbitems] = useState([]);
 
-  //Item variable Hook Declaration
+  // Item variable Hook Declaration
   const inputItemRef = useRef(null);
   const [arrayId, setArrayId] = useState(null);
   const [namabarang, setNamaBarang] = useState('');
@@ -44,51 +48,64 @@ function App() {
   const [referensi, setReferensi] = useState('');
   const [editMode, setEditMode] = useState(false);
 
-  const fetchId = async () => {
+  // --- New: Effect for Header Validation ---
+  useEffect(() => {
+    if (creator && pengawas && tujuan && kota && ekspedisi && nopol) {
+      setIsHeaderValid(true);
+    } else {
+      setIsHeaderValid(false);
+    }
+  }, [creator, pengawas, tujuan, kota, ekspedisi, nopol]);
 
-    const q = query(sjHeaderRef, orderBy('id', 'desc'), limit(3));
+
+  const fetchId = useCallback(() => {
+
+    const q = query(sjHeaderRef, orderBy('id', 'desc'), limit(1)); // Limit 1 is sufficient
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-
-      setNoSurat(querySnapshot.docs[0].get('id') + 1);
-      setTimeout(() => {
-
-      }, 2000);
+      // Handle initial load or empty collection
+      const latestId = querySnapshot.docs.length > 0 ? querySnapshot.docs[0].get('id') : 0;
+      setNoSurat(latestId + 1);
+    }, (error) => {
+        console.error("Error fetching latest ID:", error);
     });
-    return () => {
-      unsubscribe();
-    }
-
-  }
+    
+    return () => unsubscribe();
+  }, []); // Empty dependency array, runs once on mount
 
 
   useEffect(() => {
-    fetchId();
+    // Only run fetchId once on component mount
+    const unsubscribe = fetchId();
+    return () => unsubscribe();
 
-  },)
+  }, [fetchId])
 
 
-  function validasi(name, value) {
-    if (value === '') {
-      return name
-    }
-    else {
-      return '';
-    }
-
+  // Helper function for simple input validation
+  const validateInput = (name, value) => {
+    return value.trim() === '' ? name + ' wajib diisi.' : '';
   }
 
 
   function createSPB(e) {
     e.preventDefault();
-    if (validasi("creator", creator) !== '') return alert(validasi("creator", creator) + ' belum diisi');
-    if (validasi("pengawas", pengawas) !== '') return alert(validasi("pengawas", pengawas) + ' belum diisi');
-    if (validasi("tujuan", tujuan) !== '') return alert(validasi("tujuan", tujuan) + ' belum diisi');
-    if (validasi("kota", kota) !== '') return alert(validasi("kota", kota) + ' belum diisi');
-    if (validasi("ekspedisi", ekspedisi) !== '') return alert(validasi("ekspedisi", ekspedisi) + ' belum diisi');
-    if (validasi("nopol", nopol) !== '') return alert(validasi("nopol", nopol) + ' belum diisi');
+    
+    // Check all fields
+    const validationErrors = [
+        validateInput("Dibuat Oleh", creator),
+        validateInput("Pengawas", pengawas),
+        validateInput("Tujuan", tujuan),
+        validateInput("Kota", kota),
+        validateInput("Pengirim/Ekspedisi", ekspedisi),
+        validateInput("Nomor Polisi", nopol)
+    ].filter(error => error !== '');
 
-    var header = {
+    if (validationErrors.length > 0) {
+        return alert("Validasi Gagal:\n" + validationErrors.join('\n'));
+    }
+
+    const header = {
       "id": noSurat,
       "tglSuratJalan": tglSurat,
       "spbType": spbtype,
@@ -105,23 +122,27 @@ function App() {
       "receivedDate": null,
     }
 
-
-
     setspbheader(header);
-
-
+    alert(`Header Surat Jalan #${noSurat} Berhasil Dibuat. Silakan Tambahkan Barang.`);
   }
 
   function onHandleAdd(e) {
     e.preventDefault();
-    if (validasi("Nama Barang", namabarang) !== '') return alert(validasi("Nama Barang", namabarang) + ' belum diisi');
-    if (validasi("Qty", qty) !== '') return alert(validasi("Qty", qty) + ' belum diisi');
-    if (validasi("Satuan", satuan) !== '') return alert(validasi("Satuan", satuan) + ' belum diisi');
-    if (validasi("Referensi", referensi) !== '') return alert(validasi("Referensi", referensi) + ' belum diisi');
+    const validationErrors = [
+        validateInput("Nama Barang", namabarang),
+        validateInput("Qty", qty),
+        validateInput("Satuan", satuan),
+        validateInput("Referensi", referensi)
+    ].filter(error => error !== '');
+
+    if (validationErrors.length > 0) {
+        return alert("Validasi Gagal:\n" + validationErrors.join('\n'));
+    }
 
     var newItem = {
       "idSurat": noSurat,
-      "id": spbitems.length,
+      // Use array length as a temporary local ID
+      "id": spbitems.length > 0 ? Math.max(...spbitems.map(item => item.id)) + 1 : 0, 
       "namaBarang": namabarang,
       "qty": qty,
       'satuan': satuan,
@@ -129,8 +150,8 @@ function App() {
     }
 
     setspbitems([...spbitems, newItem])
-    console.log('Item Added');
 
+    // Reset Item Form
     setNamaBarang('');
     setQty('');
     setSatuan('');
@@ -144,583 +165,449 @@ function App() {
     setSpbType(e.target.value)
   }
 
-  //Done
+  // Done
   const removeItem = (e) => {
     e.preventDefault();
-    var newArr = spbitems.filter((item) => item.id != e.target.id)
-    console.log(newArr);
-    setspbitems(newArr);
-
+    const itemId = parseInt(e.currentTarget.id);
+    confirmAlert({
+      title: 'Hapus Item',
+      message: 'Yakin ingin menghapus item ini?',
+      buttons: [
+        {
+          label: 'Ya',
+          onClick: () => {
+            const newArr = spbitems.filter((item) => item.id !== itemId);
+            setspbitems(newArr);
+            // If editing the removed item, exit edit mode
+            if (editMode && arrayId === itemId) {
+                setEditMode(false);
+                setNamaBarang('');
+                setQty('');
+                setSatuan('');
+                setReferensi('');
+            }
+          }
+        },
+        { label: 'Tidak' }
+      ]
+    });
   }
+
   const editItem = (e) => {
-    console.log(e.target.id);
-    console.log(spbitems)
     e.preventDefault();
+    const itemId = parseInt(e.currentTarget.id);
     setEditMode(true);
-    var newArr = spbitems.filter((item) => item.id == e.target.id);
+    const itemToEdit = spbitems.find((item) => item.id === itemId);
 
-    setArrayId(newArr[0].id)
-    setNamaBarang(newArr[0].namaBarang);
-    setQty(newArr[0].qty);
-    setSatuan(newArr[0].satuan);
-    setReferensi(newArr[0].referensi);
+    if (itemToEdit) {
+        setArrayId(itemToEdit.id)
+        setNamaBarang(itemToEdit.namaBarang);
+        setQty(itemToEdit.qty);
+        setSatuan(itemToEdit.satuan);
+        setReferensi(itemToEdit.referensi);
+        if (inputItemRef.current) inputItemRef.current.focus();
+    }
   }
+
   const finishEditItem = (e) => {
     e.preventDefault();
+     const validationErrors = [
+        validateInput("Nama Barang", namabarang),
+        validateInput("Qty", qty),
+        validateInput("Satuan", satuan),
+        validateInput("Referensi", referensi)
+    ].filter(error => error !== '');
+
+    if (validationErrors.length > 0) {
+        return alert("Validasi Gagal:\n" + validationErrors.join('\n'));
+    }
+    
     const updatedArray = spbitems.map((item) => {
-      if (item.id == arrayId) {
-        return { item, id: arrayId, namaBarang: namabarang, qty: qty, satuan: satuan, referensi: referensi }
+      if (item.id === arrayId) {
+        return { 
+            ...item, // Keep other properties
+            id: arrayId, 
+            namaBarang: namabarang, 
+            qty: qty, 
+            satuan: satuan, 
+            referensi: referensi 
+        }
       } else {
         return item;
       }
     });
     setspbitems(updatedArray);
 
-    //RESET ITEMS
+    // RESET ITEMS
     setEditMode(false);
     setNamaBarang('');
     setQty('');
     setSatuan('');
     setReferensi('');
-    inputItemRef.current.focus()
+    setArrayId(null);
+    if (inputItemRef.current) inputItemRef.current.focus()
   }
 
   const submitConfirmation = (e) => {
-  e.preventDefault();
-  confirmAlert({
-    title: 'Konfirmasi',
-    message: 'Yakin submit surat jalan ini?',
-    buttons: [
-      {
-        label: 'Yes',
-        onClick: async () => {
-          try {
-            // Ensure spbheader is a plain object
-            await setDoc(doc(db, "surat_jalan", noSurat.toString()), spbheader);
+    e.preventDefault();
+    if (spbitems.length === 0) {
+        return alert("Gagal: Harus ada minimal 1 item barang untuk disubmit.");
+    }
+    
+    confirmAlert({
+      title: 'Konfirmasi Submit Surat Jalan',
+      message: `Yakin submit ${spbtype} #${noSurat}? Data tidak dapat diubah setelah disubmit.`,
+      buttons: [
+        {
+          label: 'Ya, Submit',
+          onClick: async () => {
+            try {
+              // 1. Submit Header
+              await setDoc(doc(db, "surat_jalan", noSurat.toString()), spbheader);
 
-            // Ensure spbitems is an array of plain objects
-            await Promise.all(spbitems.map(item => {
-              // Ensure item is a plain object
-              if (typeof item === 'string') {
-                throw new Error("Item should be an object, not a string.");
-              }
-              return addDoc(collection(db, "surat_jalan_items"), item);
-            }));
+              // 2. Submit Items (re-mapping to ensure no local 'id' is sent if not needed, use temporary doc)
+              // We must remove the temporary local 'id' used for array tracking.
+              const itemsToSubmit = spbitems.map(({ id, ...rest }) => ({
+                ...rest
+              }));
+              
+              await Promise.all(itemsToSubmit.map(item => {
+                return addDoc(collection(db, "surat_jalan_items"), item);
+              }));
 
-            // Reset the form after successful submission
-            resetAllForm();
-          } catch (error) {
-            // Handle errors (e.g., show an error message to the user)
-            console.error("Error submitting surat jalan:", error);
-          }
+              // Reset the form after successful submission
+              resetAllForm();
+              
+            } catch (error) {
+              console.error("Error submitting surat jalan:", error);
+              alert("Gagal Submit Surat Jalan: " + error.message);
+            }
+          },
+          className: 'bg-indigo-600 hover:bg-indigo-700 text-white' // Custom class for styling
+        },
+        {
+          label: 'Batal',
+          className: 'bg-gray-300 hover:bg-gray-400' // Custom class for styling
         }
-      },
-      {
-        label: 'No',
-      }
-    ]
-  });
-};
+      ]
+    });
+  };
 
 
   const resetAllForm = () => {
-    navigate('/')
-    alert('Surat Jalan Berhasil Dibuat')
+    // Reset all state to initial values, then navigate
+    // Note: Since fetchId runs on mount, we don't need to manually reset noSurat here.
     
-
-    //Object
-    // setspbheader(null);
-    // setspbitems([]);
-    // setEditMode(false);
-
-
-
-    //Header
-    // setSpbType('SPB');
-    // setCreator('');
-    // setPengawas('');
-    // setTujuan('');
-    // setKota('');
-    // setEkspedisi('');
-    // setNopol('');
-
-    //Items
-    // setArrayId(null);
-    // setNamaBarang('');
-    // setQty('');
-    // setSatuan('');
-    // setReferensi('');
-
-
+    // Header
+    setspbheader(null);
+    setSpbType('SPB');
+    setCreator('');
+    setPengawas('');
+    setTujuan('');
+    setKota('');
+    setEkspedisi('');
+    setNopol('');
+    
+    // Items
+    setspbitems([]);
+    setEditMode(false);
+    setArrayId(null);
+    setNamaBarang('');
+    setQty('');
+    setSatuan('');
+    setReferensi('');
+    
+    alert(`Surat Jalan #${noSurat} Berhasil Dibuat`);
+    navigate('/');
   }
 
+  // --- Utility for complex inputs (Placeholder SVG buttons removed for simplicity) ---
+  const InputField = ({ label, id, value, onChange, disabled, placeholder = "" }) => (
+    <div className="md:col-span-3">
+        <label htmlFor={id} className="block text-sm font-medium text-gray-700">{label}</label>
+        <input
+            disabled={disabled}
+            onChange={onChange}
+            type="text"
+            name={id}
+            id={id}
+            className={`h-10 border border-gray-300 mt-1 rounded-lg px-4 w-full bg-gray-50 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition duration-150 ${disabled ? 'opacity-70 cursor-not-allowed' : ''}`}
+            placeholder={placeholder}
+            value={value}
+        />
+    </div>
+  );
 
+  const InputFieldSmall = ({ label, id, value, onChange, disabled, placeholder = "", inputRef }) => (
+    <div className="md:col-span-2">
+        <label htmlFor={id} className="block text-sm font-medium text-gray-700">{label}</label>
+        <input
+            ref={inputRef}
+            disabled={disabled}
+            onChange={onChange}
+            type="text"
+            name={id}
+            id={id}
+            className={`h-10 border border-gray-300 mt-1 rounded-lg px-4 w-full bg-gray-50 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition duration-150 ${disabled ? 'opacity-70 cursor-not-allowed' : ''}`}
+            placeholder={placeholder}
+            value={value}
+        />
+    </div>
+  );
 
 
   return (
-    <div className="min-h-screen p-6 bg-gray-100 flex items-center justify-center">
-      <div className="container max-w-screen-lg mx-auto">
-        <div>
-          <h2 className="font-semibold text-xl text-gray-600">
-            Form Pengiriman Barang
-          </h2>
-          <p className="text-gray-500 mb-6">SM Department Site BRCG</p>
-          
+    <div className="min-h-screen p-6 bg-gray-50 flex items-center justify-center">
+      <div className="container max-w-screen-xl mx-auto">
+        
+        <header className="mb-6">
+            <h1 className="text-3xl font-extrabold text-gray-800 border-b-2 border-indigo-500 pb-2">
+                Form Pengiriman Barang
+            </h1>
+            <p className="text-gray-500 mt-1">SM Department Site BRCG - Isi detail surat jalan dan daftar barang.</p>
+        </header>
 
-          <div className="bg-white rounded shadow-lg p-4 px-4 md:p-8 mb-6">
-            <div className="grid gap-4 gap-y-2 text-sm grid-cols-1 lg:grid-cols-3">
-              <div className="text-gray-600">
-                <p className="font-medium text-lg">Surat Jalan # {noSurat} </p>
-                <p>Tanggal : {dateString}</p>
-                <button onClick={() => navigate('/')} className="mt-2 bg-slate-600 hover:bg-slate-700 disabled:bg-gray-500 text-white font-bold py-2 px-4 rounded mb-2">
-            List Surat Jalan
-          </button>
-              </div>
-              
-
-              <form onSubmit={createSPB} className="lg:col-span-2">
-                <main className="grid h-20  place-items-center">
-                  <div className="grid w-full grid-cols-2 gap-2 rounded-xl bg-gray-200 p-2">
-                    <div>
-                      <input
-                        type="radio"
-                        name="option"
-                        id="1"
-                        value="SPB"
-                        className="peer hidden"
-                        checked={spbtype === 'SPB'}
-                        onChange={onOptionChange}
-
-                      />
-                      <label
-                        htmlFor="1"
-                        className=" block cursor-pointer select-none rounded-xl p-2 text-center peer-checked:bg-blue-500 peer-checked:font-bold peer-checked:text-white"
-                      >
-                        SPB
-                      </label>
-                    </div>
-                    <div>
-                      <input
-                        type="radio"
-                        name="option"
-                        id="2"
-                        value="TT"
-                        className="peer hidden"
-                        checked={spbtype === 'TT'}
-                        onChange={onOptionChange}
-                      />
-                      <label
-                        htmlFor="2"
-                        className=" block cursor-pointer select-none rounded-xl p-2 text-center peer-checked:bg-green-500 peer-checked:font-bold peer-checked:text-white"
-                      >
-                        Tanda Terima
-                      </label>
-                    </div>
-                  </div>
-                </main>
-                <div className="grid gap-4 gap-y-2 text-sm grid-cols-1 md:grid-cols-5">
-                  <div className="md:col-span-3">
-                    <label htmlFor="creator">Dibuat Oleh</label>
-                    <input
-                      disabled={spbheader}
-                      onChange={(e) => setCreator(e.target.value)}
-                      type="text"
-                      name="creator"
-                      id="creator"
-                      className="h-10 border mt-1 rounded px-4 w-full bg-gray-50"
-                      placeholder=""
-                      value={creator}
-                    />
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <label htmlFor="pengawas">Pengawas</label>
-                    <input
-                      disabled={spbheader}
-                      onChange={(e) => setPengawas(e.target.value)}
-                      type="text"
-                      name="pengawas"
-                      id="pengawas"
-                      className="h-10 border mt-1 rounded px-4 w-full bg-gray-50"
-                      placeholder=""
-                      value={pengawas}
-                    />
-                  </div>
-
-                  <div className="md:col-span-3">
-                    <label htmlFor="tujuan">Tujuan</label>
-                    <input
-                      disabled={spbheader}
-                      onChange={(e) => setTujuan(e.target.value)}
-                      type="text"
-                      name="tujuan"
-                      id="tujuan"
-                      className="h-10 border mt-1 rounded px-4 w-full bg-gray-50"
-                      placeholder=""
-                      value={tujuan}
-                    />
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <label htmlFor="kota">Kota</label>
-                    <div className="h-10 bg-gray-50 flex border border-gray-200 rounded items-center mt-1">
-                      <input
-                        disabled={spbheader}
-                        onChange={(e) => setKota(e.target.value)}
-                        name="kota"
-                        id="kota"
-                        placeholder="Kota"
-                        className="px-4 appearance-none outline-none text-gray-800 w-full bg-transparent"
-                        value={kota}
-                      />
-                      <button
-                        tabIndex="-1"
-                        className="cursor-pointer outline-none focus:outline-none transition-all text-gray-300 hover:text-red-600"
-                      >
-                        <svg
-                          className="w-4 h-4 mx-2 fill-current"
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <line x1="18" y1="6" x2="6" y2="18"></line>
-                          <line x1="6" y1="6" x2="18" y2="18"></line>
-                        </svg>
-                      </button>
-                      <button
-                        tabIndex="-1"
-                        htmlFor="show_more"
-                        className="cursor-pointer outline-none focus:outline-none border-l border-gray-200 transition-all text-gray-300 hover:text-blue-600"
-                      >
-                        <svg
-                          className="w-4 h-4 mx-2 fill-current"
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <polyline points="18 15 12 9 6 15"></polyline>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="md:col-span-3">
-                    <label htmlFor="ekspedisi">Pengirim / Ekspedisi</label>
-                    <div className="h-10 bg-gray-50 flex border border-gray-200 rounded items-center mt-1">
-                      <input
-                        disabled={spbheader}
-                        onChange={(e) => setEkspedisi(e.target.value)}
-                        name="ekspedisi"
-                        id="ekspedisi"
-                        placeholder="Pengirim / Ekspedisi"
-                        className="px-4 appearance-none outline-none text-gray-800 w-full bg-transparent"
-                        value={ekspedisi}
-                      />
-                      <button
-                        tabIndex="-1"
-                        className="cursor-pointer outline-none focus:outline-none transition-all text-gray-300 hover:text-red-600"
-                      >
-                        <svg
-                          className="w-4 h-4 mx-2 fill-current"
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <line x1="18" y1="6" x2="6" y2="18"></line>
-                          <line x1="6" y1="6" x2="18" y2="18"></line>
-                        </svg>
-                      </button>
-                      <button
-                        tabIndex="-1"
-                        htmlFor="show_more"
-                        className="cursor-pointer outline-none focus:outline-none border-l border-gray-200 transition-all text-gray-300 hover:text-blue-600"
-                      >
-                        <svg
-                          className="w-4 h-4 mx-2 fill-current"
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <polyline points="18 15 12 9 6 15"></polyline>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <label htmlFor="nopol">Nomor Polisi</label>
-                    <div className="h-10 bg-gray-50 flex border border-gray-200 rounded items-center mt-1">
-                      <input
-                        disabled={spbheader}
-                        onChange={(e) => setNopol(e.target.value)}
-                        name="nopol"
-                        id="nopol"
-                        placeholder="Nomor Polisi"
-                        className="px-4 appearance-none outline-none text-gray-800 w-full bg-transparent"
-                        value={nopol}
-                      />
-                      <button
-                        tabIndex="-1"
-                        className="cursor-pointer outline-none focus:outline-none transition-all text-gray-300 hover:text-red-600"
-                      >
-                        <svg
-                          className="w-4 h-4 mx-2 fill-current"
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <line x1="18" y1="6" x2="6" y2="18"></line>
-                          <line x1="6" y1="6" x2="18" y2="18"></line>
-                        </svg>
-                      </button>
-                      <button
-                        tabIndex="-1"
-                        htmlFor="show_more"
-                        className="cursor-pointer outline-none focus:outline-none border-l border-gray-200 transition-all text-gray-300 hover:text-blue-600"
-                      >
-                        <svg
-                          className="w-4 h-4 mx-2 fill-current"
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <polyline points="18 15 12 9 6 15"></polyline>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="md:col-span-5 text-right">
-                    <div className="inline-flex items-end">
-                      {spbheader ? <div></div> : <button disabled={spbheader} type="submit" className={`${spbtype === `SPB` ? `bg-blue-500 hover:bg-blue-700` : `bg-green-500 hover:bg-green-700`} disabled:bg-gray-500 text-white font-bold py-2 px-4 rounded`}>
-                        Create Header
-                      </button>}
-                    </div>
-                  </div>
+        <div className="bg-white rounded-xl shadow-2xl p-6 md:p-8 mb-6">
+            
+            {/* --- HEADER SECTION --- */}
+            <div className="grid gap-6 gap-y-4 text-sm grid-cols-1 lg:grid-cols-3 border-b pb-6 mb-6">
+                
+                {/* Info & Navigation */}
+                <div className="text-gray-700 space-y-3">
+                    <p className="font-extrabold text-2xl text-indigo-600">
+                        Surat Jalan #{noSurat} 
+                    </p>
+                    <p className="text-base font-medium">Tanggal: <span className="text-gray-600">{dateString}</span></p>
+                    
+                    <button onClick={() => navigate('/')} className="mt-2 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg shadow transition duration-200">
+                        <i className="fa fa-list mr-2"></i> Kembali ke Daftar
+                    </button>
                 </div>
-              </form>
+                
+                {/* Form Header */}
+                <form onSubmit={createSPB} className="lg:col-span-2 space-y-4">
+                    
+                    {/* SPB/TT Toggle */}
+                    <div className="flex justify-center">
+                        <div className="grid w-full max-w-sm grid-cols-2 rounded-xl p-1 shadow-inner bg-gray-100">
+                            <div>
+                                <input
+                                    type="radio"
+                                    name="option"
+                                    id="spb_option"
+                                    value="SPB"
+                                    className="peer hidden"
+                                    checked={spbtype === 'SPB'}
+                                    onChange={onOptionChange}
+                                    disabled={spbheader}
+                                />
+                                <label
+                                    htmlFor="spb_option"
+                                    className="block cursor-pointer select-none rounded-lg p-2 text-center text-sm font-semibold peer-checked:bg-indigo-600 peer-checked:text-white transition duration-200"
+                                >
+                                    SPB 
+                                </label>
+                            </div>
+                            <div>
+                                <input
+                                    type="radio"
+                                    name="option"
+                                    id="tt_option"
+                                    value="TT"
+                                    className="peer hidden"
+                                    checked={spbtype === 'TT'}
+                                    onChange={onOptionChange}
+                                    disabled={spbheader}
+                                />
+                                <label
+                                    htmlFor="tt_option"
+                                    className="block cursor-pointer select-none rounded-lg p-2 text-center text-sm font-semibold peer-checked:bg-green-600 peer-checked:text-white transition duration-200"
+                                >
+                                    Tanda Terima
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Header Fields */}
+                    <div className="grid gap-4 gap-y-4 text-sm grid-cols-1 md:grid-cols-5">
+                        
+                        <InputField label="Dibuat Oleh" id="creator" value={creator} onChange={(e) => setCreator(e.target.value)} disabled={spbheader} placeholder="Nama Pembuat" />
+                        <InputFieldSmall label="Pengawas" id="pengawas" value={pengawas} onChange={(e) => setPengawas(e.target.value)} disabled={spbheader} placeholder="Nama Pengawas" />
+
+                        <InputField label="Tujuan Pengiriman" id="tujuan" value={tujuan} onChange={(e) => setTujuan(e.target.value)} disabled={spbheader} placeholder="Departemen/Lokasi Tujuan" />
+                        <InputFieldSmall label="Kota Tujuan" id="kota" value={kota} onChange={(e) => setKota(e.target.value)} disabled={spbheader} placeholder="Cth: Balikpapan" />
+
+                        <InputField label="Pengirim / Ekspedisi" id="ekspedisi" value={ekspedisi} onChange={(e) => setEkspedisi(e.target.value)} disabled={spbheader} placeholder="Nama Ekspedisi/Vendor" />
+                        <InputFieldSmall label="Nomor Polisi" id="nopol" value={nopol} onChange={(e) => setNopol(e.target.value)} disabled={spbheader} placeholder="Cth: KT 1234 SM" />
+
+                        {/* Create Header Button */}
+                        <div className="md:col-span-5 text-right pt-2">
+                            {spbheader ? 
+                                <p className={`inline-flex items-center text-sm font-semibold p-2 rounded-lg ${spbtype === 'SPB' ? 'bg-indigo-100 text-indigo-700' : 'bg-green-100 text-green-700'}`}>
+                                    <CheckIcon /> Header sudah dibuat! Lanjut tambah barang.
+                                </p>
+                                : 
+                                <button 
+                                    disabled={!isHeaderValid} 
+                                    type="submit" 
+                                    className={`${spbtype === `SPB` ? `bg-indigo-600 hover:bg-indigo-700` : `bg-green-600 hover:bg-green-700`} text-white font-bold py-2.5 px-6 rounded-lg shadow-md transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed`}
+                                >
+                                    <i className="fa fa-pen mr-2"></i> Simpan Header
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </form>
             </div>
 
-            {spbheader === null ? <div></div> :
-              <div className="input__panel">
-                <div className="grid gap-4 gap-y-2 text-sm grid-cols-1 md:grid-cols-6">
+
+            {/* --- ITEM INPUT SECTION --- */}
+            {spbheader && (
+              <div className="space-y-4 border-b pb-6 mb-6">
+                <h3 className="text-xl font-semibold text-gray-800">Daftar Barang ({spbtype})</h3>
+                
+                <div className="grid gap-4 gap-y-4 text-sm grid-cols-1 md:grid-cols-6">
+                  
                   <div className="md:col-span-2">
-                    <label htmlFor="input_namabarang">Nama Barang</label>
+                    <label htmlFor="input_namabarang" className="block text-sm font-medium text-gray-700">Nama Barang</label>
                     <input
                       ref={inputItemRef}
                       onChange={(e) => setNamaBarang(e.target.value)}
                       type="text"
                       name="input_namabarang"
                       id="input_namabarang"
-                      className="h-10 border mt-1 rounded px-4 w-full bg-gray-50"
+                      className="h-10 border border-gray-300 mt-1 rounded-lg px-4 w-full bg-gray-50 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition duration-150"
                       value={namabarang}
-                      placeholder=""
+                      placeholder="Cth: Baut M10"
                     />
                   </div>
                   <div className="md:col-span-1">
-                    <label htmlFor="input_qty">Qty</label>
+                    <label htmlFor="input_qty" className="block text-sm font-medium text-gray-700">Qty</label>
                     <input
-                      onChange={(e) => setQty(e.target.value)}
+                      onChange={(e) => setQty(e.target.value.replace(/[^0-9.]/g, ''))} // Filter non-numeric input
                       type="text"
                       name="input_qty"
                       id="input_qty"
                       value={qty}
-                      className="h-10 border mt-1 rounded px-4 w-full bg-gray-50"
-
-                      placeholder=""
+                      className="h-10 border border-gray-300 mt-1 rounded-lg px-4 w-full bg-gray-50 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition duration-150"
+                      placeholder="Jumlah"
                     />
                   </div>
                   <div className="md:col-span-1">
-                    <label htmlFor="input_satuan">Satuan</label>
-                    <div className="h-10 bg-gray-50 flex border border-gray-200 rounded items-center mt-1">
-                      <input
-                        onChange={(e) => setSatuan(e.target.value)}
-                        name="input_satuan"
-                        id="input_satuan"
-                        placeholder="Satuan"
-                        className="px-4 appearance-none outline-none text-gray-800 w-full bg-transparent"
-                        value={satuan}
-
-                      />
-                      <button
-                        tabIndex="-1"
-                        className="cursor-pointer outline-none focus:outline-none transition-all text-gray-300 hover:text-red-600"
-                      >
-                        <svg
-                          className="w-4 h-4 mx-2 fill-current"
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <line x1="18" y1="6" x2="6" y2="18"></line>
-                          <line x1="6" y1="6" x2="18" y2="18"></line>
-                        </svg>
-                      </button>
-                      <button
-                        tabIndex="-1"
-                        htmlFor="show_more"
-                        className="cursor-pointer outline-none focus:outline-none border-l border-gray-200 transition-all text-gray-300 hover:text-blue-600"
-                      >
-                        <svg
-                          className="w-4 h-4 mx-2 fill-current"
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <polyline points="18 15 12 9 6 15"></polyline>
-                        </svg>
-                      </button>
-                    </div>
+                    <label htmlFor="input_satuan" className="block text-sm font-medium text-gray-700">Satuan</label>
+                    <input
+                      onChange={(e) => setSatuan(e.target.value)}
+                      name="input_satuan"
+                      id="input_satuan"
+                      placeholder="Cth: Pcs/Kg/Roll"
+                      className="h-10 border border-gray-300 mt-1 rounded-lg px-4 w-full bg-gray-50 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition duration-150"
+                      value={satuan}
+                    />
                   </div>
                   <div className="md:col-span-2">
-                    <label htmlFor="input_referensi">Referensi</label>
+                    <label htmlFor="input_referensi" className="block text-sm font-medium text-gray-700">Referensi (Part No/Keterangan)</label>
                     <input
                       onChange={(e) => setReferensi(e.target.value)}
                       type="text"
                       name="input_referensi"
                       id="input_referensi"
-                      className="h-10 border mt-1 rounded px-4 w-full bg-gray-50"
+                      className="h-10 border border-gray-300 mt-1 rounded-lg px-4 w-full bg-gray-50 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition duration-150"
                       value={referensi}
-                      placeholder=""
+                      placeholder="Cth: PN-456, No PO, dll"
                     />
                   </div>
                 </div>
-                {editMode ?
-                  <div className="md:col-span-5 text-right mt-2">
-                    <div className="inline-flex items-end">
-                      <button onClick={finishEditItem} className="bg-cyan-700 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded">
-                        Finish Edit
+                
+                {/* Item Action Button */}
+                <div className="md:col-span-6 text-right pt-2">
+                  <div className="inline-flex items-end">
+                    {editMode ?
+                      <button onClick={finishEditItem} className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2.5 px-6 rounded-lg shadow-md transition duration-200">
+                        <SaveIcon /> Selesai Edit Item
                       </button>
-                    </div>
+                      :
+                      <button onClick={onHandleAdd} className={`${spbtype === `SPB` ? `bg-indigo-600 hover:bg-indigo-700` : `bg-green-600 hover:bg-green-700`} text-white font-bold py-2.5 px-6 rounded-lg shadow-md transition duration-200`}>
+                        <PlusIcon /> Tambah Item
+                      </button>
+                    }
                   </div>
-
-                  : <div className="md:col-span-5 text-right mt-2">
-                    <div className="inline-flex items-end">
-                      <button onClick={onHandleAdd} className={`${spbtype === `SPB` ? `bg-blue-500 hover:bg-blue-700` : `bg-green-500 hover:bg-green-700`} disabled:bg-gray-500 text-white font-bold py-2 px-4 rounded`}>
-                        Add Item
-                      </button>
-                    </div>
-                  </div>}
+                </div>
               </div>
-            }
+            )}
 
 
-            {/* Table */}
-            <table className="border-collapse w-full mt-10">
-              <thead>
-                <tr>
-                  <th className="p-3 font-bold uppercase bg-gray-200 text-gray-600 border border-gray-300 hidden lg:table-cell">
-                    Nama Barang
-                  </th>
-                  <th className="p-3 font-bold uppercase bg-gray-200 text-gray-600 border border-gray-300 hidden lg:table-cell">
-                    Qty
-                  </th>
-                  <th className="p-3 font-bold uppercase bg-gray-200 text-gray-600 border border-gray-300 hidden lg:table-cell">
-                    Satuan
-                  </th>
-                  <th className="p-3 font-bold uppercase bg-gray-200 text-gray-600 border border-gray-300 hidden lg:table-cell">
-                    Referensi
-                  </th>
-                  <th className="p-3 font-bold uppercase bg-gray-200 text-gray-600 border border-gray-300 hidden lg:table-cell">
-                    Action
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
+            {/* --- ITEM LIST TABLE --- */}
+            {spbheader && (
+                <>
+                <h3 className="text-xl font-semibold text-gray-800 mb-4">Ringkasan Barang ({spbitems.length} Item)</h3>
+                <div className="overflow-x-auto border border-gray-200 rounded-lg shadow-inner">
+                  <table className="w-full text-sm border-collapse">
+                    <thead>
+                      <tr className="bg-gray-100">
+                        <th className="p-3 font-bold uppercase text-xs text-gray-600 border-r border-gray-200 w-1/4 text-left">Nama Barang</th>
+                        <th className="p-3 font-bold uppercase text-xs text-gray-600 border-r border-gray-200 w-1/12 text-center">Qty</th>
+                        <th className="p-3 font-bold uppercase text-xs text-gray-600 border-r border-gray-200 w-1/12 text-center">Satuan</th>
+                        <th className="p-3 font-bold uppercase text-xs text-gray-600 border-r border-gray-200 w-1/3 text-left">Referensi</th>
+                        <th className="p-3 font-bold uppercase text-xs text-gray-600 w-1/6 text-center">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody>
 
-                {spbitems.map((item) => (
-                  <tr key={item.id} className="bg-white lg:hover:bg-gray-100 flex lg:table-row flex-row lg:flex-row flex-wrap lg:flex-no-wrap mb-10 lg:mb-0">
-                    <td className="w-full lg:w-auto p-3 text-gray-800 text-center border border-b block lg:table-cell relative lg:static">
-                      <span className="lg:hidden absolute top-0 left-0 bg-blue-200 px-2 py-1 text-xs font-bold uppercase">
-                        Nama Barang
-                      </span>
-                      {item.namaBarang}
-                    </td>
-                    <td className="w-full lg:w-auto p-3 text-gray-800 text-center border border-b block lg:table-cell relative lg:static">
-                      <span className="lg:hidden absolute top-0 left-0 bg-blue-200 px-2 py-1 text-xs font-bold uppercase">
-                        Qty
-                      </span>
-                      {item.qty}
-                    </td>
-                    <td className="w-full lg:w-auto p-3 text-gray-800 text-center border border-b block lg:table-cell relative lg:static">
-                      <span className="lg:hidden absolute top-0 left-0 bg-blue-200 px-2 py-1 text-xs font-bold uppercase">
-                        Satuan
-                      </span>
-                      <span className="">
-                        {item.satuan}
-                      </span>
-                    </td>
-                    <td className="w-full lg:w-auto p-3 text-gray-800 text-center border border-b block lg:table-cell relative lg:static">
-                      <span className="lg:hidden absolute top-0 left-0 bg-blue-200 px-2 py-1 text-xs font-bold uppercase">
-                        Referensi
-                      </span>
-                      {item.referensi}
-                    </td>
-                    <td className="w-full lg:w-auto p-3 text-gray-800 border border-b text-center block lg:table-cell relative lg:static">
-                      <span className="lg:hidden absolute top-0 left-0 bg-blue-200 px-2 py-1 text-xs font-bold uppercase">
-                        Action
-                      </span>
-                      <a
-                        id={item.id}
-                        onClick={editItem}
-                        href="#"
-                        className="text-blue-400 hover:text-blue-600 underline"
-                      >
-                        Edit
-                      </a>
-                      <a
-                        id={item.id}
-                        onClick={removeItem}
-                        href="#"
-                        className="text-blue-400 hover:text-blue-600 underline pl-6"
-                      >
-                        Remove
-                      </a>
-                    </td>
-                  </tr>
-
-                ))}
-
-
-
-              </tbody>
-            </table>
-            {/* End Table */}
-            {spbitems.length > 0 ? <div className="flex justify-center text-right mt-10">
-              <div className="inline-flex items-center">
-                <button onClick={submitConfirmation} className={`${spbtype === `SPB` ? `bg-blue-500 hover:bg-blue-700` : `bg-green-500 hover:bg-green-700`} disabled:bg-gray-500 text-white font-bold py-2 px-4 rounded`}>
-                  Submit Surat Jalan
-                </button>
-              </div>
-            </div> : <div></div>}
+                      {spbitems.length === 0 ? (
+                        <tr>
+                            <td colSpan="5" className="p-6 text-center text-gray-500 italic">
+                                Belum ada barang yang ditambahkan.
+                            </td>
+                        </tr>
+                      ) : (
+                        spbitems.map((item) => (
+                          <tr key={item.id} className="bg-white border-b border-gray-100 hover:bg-gray-50 transition duration-150">
+                            <td className="p-3 text-gray-800 text-left font-medium border-r border-gray-200">{item.namaBarang}</td>
+                            <td className="p-3 text-gray-800 text-center border-r border-gray-200">{item.qty}</td>
+                            <td className="p-3 text-gray-600 text-center border-r border-gray-200">{item.satuan}</td>
+                            <td className="p-3 text-gray-600 text-left border-r border-gray-200 text-xs font-mono">{item.referensi}</td>
+                            <td className="p-3 text-center">
+                              <div className="flex justify-center gap-4">
+                                <button
+                                  id={item.id}
+                                  onClick={editItem}
+                                  className="text-indigo-600 hover:text-indigo-800 font-semibold text-sm"
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  id={item.id}
+                                  onClick={removeItem}
+                                  className="text-red-600 hover:text-red-800 font-semibold text-sm"
+                                >
+                                  Hapus
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                
+                {/* Submit Button */}
+                <div className="flex justify-end mt-6">
+                  <button 
+                    onClick={submitConfirmation} 
+                    disabled={spbitems.length === 0}
+                    className={`${spbtype === `SPB` ? `bg-indigo-600 hover:bg-indigo-700` : `bg-green-600 hover:bg-green-700`} text-white font-bold py-3 px-8 rounded-lg shadow-xl transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed`}
+                  >
+                    <SaveIcon /> Submit Surat Jalan ({spbitems.length} Item)
+                  </button>
+                </div>
+                </>
+            )}
+            {/* End Item List */}
           </div>
         </div>
       </div>
-    </div>
   );
 }
 

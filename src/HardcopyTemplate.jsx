@@ -186,7 +186,7 @@ class HardcopyTemplate extends React.PureComponent {
             <h1 className='text-center'>Penerima </h1>
             <div className="footer__sign text-center">
               <h1>___________ </h1>
-              <h1 className='text-xs'>{this.props.header ? this.props.header.ekspedisi : ""}</h1>
+              
             </div>
 
           </div>
