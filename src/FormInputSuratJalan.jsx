@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import "./App.css";
 import { confirmAlert } from 'react-confirm-alert'; // Import
 import 'react-confirm-alert/src/react-confirm-alert.css' // Import css
@@ -10,12 +10,56 @@ import { useNavigate } from "react-router-dom";
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
 
-// --- Icon Components (Optional, for cleaner code) ---
-// Note: Assuming you use Tailwind and FontAwesome/similar icons
+// --- Icon Components (Penting di luar fungsi App untuk stabilitas) ---
 const CheckIcon = () => <svg className="w-4 h-4 mr-1 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M0 11l2-2 5 5L18 3l2 2L7 18z"/></svg>;
 const PlusIcon = () => <svg className="w-4 h-4 mr-1 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>;
 const SaveIcon = () => <svg className="w-4 h-4 mr-1 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>;
 
+// ---------------------------------------------------------------------
+// --- Optimized Input Field Components menggunakan React.memo ---------
+// Ini mencegah re-render komponen input jika props-nya (value, onChange) tidak berubah.
+// Ini adalah KUNCI untuk mengatasi masalah kehilangan fokus saat mengetik.
+// ---------------------------------------------------------------------
+
+const InputField = React.memo(({ label, id, value, onChange, disabled, placeholder = "" }) => (
+    <div className="md:col-span-3">
+        <label htmlFor={id} className="block text-sm font-medium text-gray-700">{label}</label>
+        <input
+            disabled={disabled}
+            onChange={onChange}
+            type="text"
+            name={id}
+            id={id}
+            className={`h-10 border border-gray-300 mt-1 rounded-lg px-4 w-full bg-gray-50 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition duration-150 ${disabled ? 'opacity-70 cursor-not-allowed' : ''}`}
+            placeholder={placeholder}
+            value={value}
+        />
+    </div>
+));
+InputField.displayName = 'InputField'; // Opsional, membantu debugging
+
+const InputFieldSmall = React.memo(({ label, id, value, onChange, disabled, placeholder = "", inputRef }) => (
+    <div className="md:col-span-2">
+        <label htmlFor={id} className="block text-sm font-medium text-gray-700">{label}</label>
+        <input
+            ref={inputRef} // Hanya digunakan untuk input barang, aman
+            disabled={disabled}
+            onChange={onChange}
+            type="text"
+            name={id}
+            id={id}
+            className={`h-10 border border-gray-300 mt-1 rounded-lg px-4 w-full bg-gray-50 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition duration-150 ${disabled ? 'opacity-70 cursor-not-allowed' : ''}`}
+            placeholder={placeholder}
+            value={value}
+        />
+    </div>
+));
+InputFieldSmall.displayName = 'InputFieldSmall'; // Opsional, membantu debugging
+
+
+// ---------------------------------------------------------------------
+// --- Main App Component ----------------------------------------------
+// ---------------------------------------------------------------------
 
 function App() {
 
@@ -32,8 +76,8 @@ function App() {
   const [nopol, setNopol] = useState('');
   const [isHeaderValid, setIsHeaderValid] = useState(false); // Validasi untuk enable tombol
   
-  var tglSurat = new Date();
-  var dateString = tglSurat.getDate().toString().padStart(2, '0') + " " + months[tglSurat.getMonth()] + " " + tglSurat.getFullYear();
+  const tglSurat = useRef(new Date()).current; // Gunakan useRef agar tanggal tidak berubah pada setiap render
+  const dateString = tglSurat.getDate().toString().padStart(2, '0') + " " + months[tglSurat.getMonth()] + " " + tglSurat.getFullYear();
 
   // SPB Object Hook Declaration
   const [spbheader, setspbheader] = useState(null);
@@ -48,22 +92,19 @@ function App() {
   const [referensi, setReferensi] = useState('');
   const [editMode, setEditMode] = useState(false);
 
-  // --- New: Effect for Header Validation ---
+  // --- New: Effect for Header Validation (Keep this, it's correct) ---
   useEffect(() => {
-    if (creator && pengawas && tujuan && kota && ekspedisi && nopol) {
-      setIsHeaderValid(true);
-    } else {
-      setIsHeaderValid(false);
-    }
+    // Memastikan NOPOL tidak kosong (minimal 1 karakter) untuk mencegah validasi palsu dari spasi
+    const isValid = [creator, pengawas, tujuan, kota, ekspedisi, nopol].every(field => field.trim() !== '');
+    setIsHeaderValid(isValid);
   }, [creator, pengawas, tujuan, kota, ekspedisi, nopol]);
 
 
   const fetchId = useCallback(() => {
-
-    const q = query(sjHeaderRef, orderBy('id', 'desc'), limit(1)); // Limit 1 is sufficient
+    // Referensi Firestore harus dijamin valid, diasumsikan sudah ada di FirebaseConfig
+    const q = query(sjHeaderRef, orderBy('id', 'desc'), limit(1));
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      // Handle initial load or empty collection
       const latestId = querySnapshot.docs.length > 0 ? querySnapshot.docs[0].get('id') : 0;
       setNoSurat(latestId + 1);
     }, (error) => {
@@ -71,11 +112,11 @@ function App() {
     });
     
     return () => unsubscribe();
-  }, []); // Empty dependency array, runs once on mount
+  }, []); 
 
 
   useEffect(() => {
-    // Only run fetchId once on component mount
+    // Hanya jalankan fetchId sekali saat komponen dimuat
     const unsubscribe = fetchId();
     return () => unsubscribe();
 
@@ -139,17 +180,19 @@ function App() {
         return alert("Validasi Gagal:\n" + validationErrors.join('\n'));
     }
 
+    // Hitung ID lokal sementara
+    const newLocalId = spbitems.length > 0 ? Math.max(...spbitems.map(item => item.id)) + 1 : 0; 
+
     var newItem = {
       "idSurat": noSurat,
-      // Use array length as a temporary local ID
-      "id": spbitems.length > 0 ? Math.max(...spbitems.map(item => item.id)) + 1 : 0, 
+      "id": newLocalId, // ID lokal sementara untuk manipulasi array
       "namaBarang": namabarang,
       "qty": qty,
       'satuan': satuan,
       "referensi": referensi
     }
 
-    setspbitems([...spbitems, newItem])
+    setspbitems((prevItems) => [...prevItems, newItem]);
 
     // Reset Item Form
     setNamaBarang('');
@@ -157,15 +200,13 @@ function App() {
     setSatuan('');
     setReferensi('');
 
-    inputItemRef.current.focus()
-
+    if (inputItemRef.current) inputItemRef.current.focus()
   }
 
   const onOptionChange = e => {
     setSpbType(e.target.value)
   }
 
-  // Done
   const removeItem = (e) => {
     e.preventDefault();
     const itemId = parseInt(e.currentTarget.id);
@@ -176,8 +217,10 @@ function App() {
         {
           label: 'Ya',
           onClick: () => {
-            const newArr = spbitems.filter((item) => item.id !== itemId);
-            setspbitems(newArr);
+            setspbitems((prevItems) => {
+                const newArr = prevItems.filter((item) => item.id !== itemId);
+                return newArr;
+            });
             // If editing the removed item, exit edit mode
             if (editMode && arrayId === itemId) {
                 setEditMode(false);
@@ -185,6 +228,7 @@ function App() {
                 setQty('');
                 setSatuan('');
                 setReferensi('');
+                setArrayId(null);
             }
           }
         },
@@ -222,21 +266,22 @@ function App() {
         return alert("Validasi Gagal:\n" + validationErrors.join('\n'));
     }
     
-    const updatedArray = spbitems.map((item) => {
-      if (item.id === arrayId) {
-        return { 
-            ...item, // Keep other properties
-            id: arrayId, 
-            namaBarang: namabarang, 
-            qty: qty, 
-            satuan: satuan, 
-            referensi: referensi 
-        }
-      } else {
-        return item;
-      }
+    setspbitems((prevItems) => {
+        return prevItems.map((item) => {
+            if (item.id === arrayId) {
+                return { 
+                    ...item, // Keep other properties
+                    id: arrayId, 
+                    namaBarang: namabarang, 
+                    qty: qty, 
+                    satuan: satuan, 
+                    referensi: referensi 
+                }
+            } else {
+                return item;
+            }
+        });
     });
-    setspbitems(updatedArray);
 
     // RESET ITEMS
     setEditMode(false);
@@ -265,14 +310,16 @@ function App() {
               // 1. Submit Header
               await setDoc(doc(db, "surat_jalan", noSurat.toString()), spbheader);
 
-              // 2. Submit Items (re-mapping to ensure no local 'id' is sent if not needed, use temporary doc)
-              // We must remove the temporary local 'id' used for array tracking.
+              // 2. Submit Items (Hapus ID lokal sebelum dikirim)
               const itemsToSubmit = spbitems.map(({ id, ...rest }) => ({
                 ...rest
               }));
               
+              const itemCollectionRef = collection(db, "surat_jalan_items");
+              
               await Promise.all(itemsToSubmit.map(item => {
-                return addDoc(collection(db, "surat_jalan_items"), item);
+                // Tambahkan 'idSurat' ke setiap item yang disubmit (sudah ada di itemsToSubmit)
+                return addDoc(itemCollectionRef, item);
               }));
 
               // Reset the form after successful submission
@@ -295,8 +342,6 @@ function App() {
 
 
   const resetAllForm = () => {
-    // Reset all state to initial values, then navigate
-    // Note: Since fetchId runs on mount, we don't need to manually reset noSurat here.
     
     // Header
     setspbheader(null);
@@ -318,42 +363,10 @@ function App() {
     setReferensi('');
     
     alert(`Surat Jalan #${noSurat} Berhasil Dibuat`);
-    navigate('/');
+    // Tunggu sampai ID baru ter-fetch sebelum navigasi, atau navigasi segera
+    // Di sini, kita asumsikan ID baru sudah segera di-fetch di background
+    navigate('/'); 
   }
-
-  // --- Utility for complex inputs (Placeholder SVG buttons removed for simplicity) ---
-  const InputField = ({ label, id, value, onChange, disabled, placeholder = "" }) => (
-    <div className="md:col-span-3">
-        <label htmlFor={id} className="block text-sm font-medium text-gray-700">{label}</label>
-        <input
-            disabled={disabled}
-            onChange={onChange}
-            type="text"
-            name={id}
-            id={id}
-            className={`h-10 border border-gray-300 mt-1 rounded-lg px-4 w-full bg-gray-50 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition duration-150 ${disabled ? 'opacity-70 cursor-not-allowed' : ''}`}
-            placeholder={placeholder}
-            value={value}
-        />
-    </div>
-  );
-
-  const InputFieldSmall = ({ label, id, value, onChange, disabled, placeholder = "", inputRef }) => (
-    <div className="md:col-span-2">
-        <label htmlFor={id} className="block text-sm font-medium text-gray-700">{label}</label>
-        <input
-            ref={inputRef}
-            disabled={disabled}
-            onChange={onChange}
-            type="text"
-            name={id}
-            id={id}
-            className={`h-10 border border-gray-300 mt-1 rounded-lg px-4 w-full bg-gray-50 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition duration-150 ${disabled ? 'opacity-70 cursor-not-allowed' : ''}`}
-            placeholder={placeholder}
-            value={value}
-        />
-    </div>
-  );
 
 
   return (
@@ -432,6 +445,7 @@ function App() {
                     {/* Header Fields */}
                     <div className="grid gap-4 gap-y-4 text-sm grid-cols-1 md:grid-cols-5">
                         
+                        {/* PENTING: Gunakan InputField yang sudah di-memo */}
                         <InputField label="Dibuat Oleh" id="creator" value={creator} onChange={(e) => setCreator(e.target.value)} disabled={spbheader} placeholder="Nama Pembuat" />
                         <InputFieldSmall label="Pengawas" id="pengawas" value={pengawas} onChange={(e) => setPengawas(e.target.value)} disabled={spbheader} placeholder="Nama Pengawas" />
 
@@ -465,10 +479,11 @@ function App() {
             {/* --- ITEM INPUT SECTION --- */}
             {spbheader && (
               <div className="space-y-4 border-b pb-6 mb-6">
-                <h3 className="text-xl font-semibold text-gray-800">Daftar Barang ({spbtype})</h3>
+                <h3 className="text-xl font-semibold text-gray-800">Daftar Barang ({spbitems.length} Item)</h3>
                 
                 <div className="grid gap-4 gap-y-4 text-sm grid-cols-1 md:grid-cols-6">
                   
+                  {/* Bagian Input Barang (di dalam component ini tidak perlu memo lagi karena hanya dirender ulang jika spbheader ada) */}
                   <div className="md:col-span-2">
                     <label htmlFor="input_namabarang" className="block text-sm font-medium text-gray-700">Nama Barang</label>
                     <input
@@ -485,7 +500,8 @@ function App() {
                   <div className="md:col-span-1">
                     <label htmlFor="input_qty" className="block text-sm font-medium text-gray-700">Qty</label>
                     <input
-                      onChange={(e) => setQty(e.target.value.replace(/[^0-9.]/g, ''))} // Filter non-numeric input
+                      // Hapus filter non-numeric jika Anda ingin Qty bisa berupa '1.5' atau '1/2'
+                      onChange={(e) => setQty(e.target.value)} 
                       type="text"
                       name="input_qty"
                       id="input_qty"
@@ -562,6 +578,7 @@ function App() {
                         </tr>
                       ) : (
                         spbitems.map((item) => (
+                          // PENTING: Key pada <tr> harus stabil, ID lokal sudah digunakan
                           <tr key={item.id} className="bg-white border-b border-gray-100 hover:bg-gray-50 transition duration-150">
                             <td className="p-3 text-gray-800 text-left font-medium border-r border-gray-200">{item.namaBarang}</td>
                             <td className="p-3 text-gray-800 text-center border-r border-gray-200">{item.qty}</td>
