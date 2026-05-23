@@ -4,8 +4,6 @@ import LogoPama from './assets/pamatrans.png'
 
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
-var tglSurat = new Date();
-var dateString = tglSurat.getDate() + " " + months[tglSurat.getMonth()] + " " + tglSurat.getFullYear();
 
 class HardcopyTemplate extends React.PureComponent {
 
@@ -20,6 +18,11 @@ class HardcopyTemplate extends React.PureComponent {
     return year;
   }
 
+  formatFullDate = (time) => {
+    if (!time) return "";
+    const timeObj = new Date(time.toDate());
+    return timeObj.getDate() + " " + months[timeObj.getMonth()] + " " + timeObj.getFullYear();
+  }
 
   render() {
     return (
@@ -42,7 +45,7 @@ class HardcopyTemplate extends React.PureComponent {
 
         <div className="flex mt-6">
           <div className="w-1/5 ">
-          <div className="footer__sign text-start">
+            <div className="footer__sign text-start">
               <h1 className=' font-bold underline text-xs'>Data Pengiriman </h1>
               <h1 className='text-xs'>Ekspedisi</h1>
               <h1 className='text-xs'>Nomor Polisi</h1>
@@ -50,7 +53,7 @@ class HardcopyTemplate extends React.PureComponent {
             </div>
           </div>
           <div className="w-2/5 ">
-          <div className="footer__sign text-start">
+            <div className="footer__sign text-start">
               <h1 className='text-white'>&#160;</h1>
               <h1 className='text-xs'>: {this.props.header ? this.props.header.ekspedisi : ""}</h1>
               <h1 className='text-xs'>: {this.props.header ? this.props.header.nopol : ""}</h1>
@@ -58,11 +61,11 @@ class HardcopyTemplate extends React.PureComponent {
             </div>
           </div>
           <div className="w-2/5 ">
-          <div className="footer__sign text-start">
+            <div className="footer__sign text-start">
               <h1 className=' text-xs font-bold underline'>Kepada Yth.</h1>
-              <h1 className='text-xs'>{this.props.header? this.props.header.tujuan : ""}</h1>
+              <h1 className='text-xs'>{this.props.header ? this.props.header.tujuan : ""}</h1>
               <h1 className='text-xs'>di</h1>
-              <h1 className='text-xs'>{this.props.header? this.props.header.kota : ""}</h1>
+              <h1 className='text-xs'>{this.props.header ? this.props.header.kota : ""}</h1>
             </div>
           </div>
         </div>
@@ -178,7 +181,7 @@ class HardcopyTemplate extends React.PureComponent {
 
 
         <div className="tanggal mt-10 flex-col w-full items-end text-right justify-end">
-          <h1 className='font-bold mr-3'>Gurimbang, {dateString}</h1>
+          <h1 className='font-bold mr-3'>Gurimbang, {this.props.header ? this.formatFullDate(this.props.header.tglSuratJalan) : ""}</h1>
         </div>
 
         <div className="mt-10 signature h-60 grid grid-rows-1 grid-cols-3">
@@ -186,7 +189,7 @@ class HardcopyTemplate extends React.PureComponent {
             <h1 className='text-center'>Penerima </h1>
             <div className="footer__sign text-center">
               <h1>___________ </h1>
-              
+
             </div>
 
           </div>
